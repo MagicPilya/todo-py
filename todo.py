@@ -60,6 +60,9 @@ class TodoApp:
 
         self.update_task_frame()
 
+        # Привязка события нажатия клавиши Enter к методу add_task
+        self.entry.bind("<Return>", lambda event: self.add_task())
+
     def load_tasks(self):
         if os.path.exists("tasks.json"):
             with open("tasks.json", "r") as file:
@@ -109,6 +112,12 @@ class TodoApp:
         edit_window = tk.Toplevel(self.root)
         edit_window.title("Edit Task")
 
+        def edit_cancel(event=None):
+            edit_window.destroy()
+
+        # Привязываем событие нажатия Esc к методу edit_cancel
+        edit_window.bind("<Escape>", edit_cancel)
+
         title_label = tk.Label(edit_window, text="Task Title:", font=("Helvetica", 12))
         title_label.pack(pady=5)
 
@@ -116,12 +125,18 @@ class TodoApp:
         title_entry.pack(pady=5)
         title_entry.insert(0, task.title)
 
+        # Привязываем событие нажатия Enter к методу save_changes
+        title_entry.bind("<Return>", lambda event: save_changes())
+
         deadline_label = tk.Label(edit_window, text="Deadline:", font=("Helvetica", 12))
         deadline_label.pack(pady=5)
 
         deadline_entry = DateEntry(edit_window, font=("Helvetica", 12), date_pattern="yyyy-MM-dd")
         deadline_entry.pack(pady=5)
         deadline_entry.set_date(datetime.strptime(task.deadline, '%Y-%m-%d'))
+
+        # Привязываем событие нажатия Enter к методу save_changes
+        deadline_entry.bind("<Return>", lambda event: save_changes())
 
         def save_changes():
             new_title = title_entry.get()
@@ -138,6 +153,7 @@ class TodoApp:
 
         save_button = tk.Button(edit_window, text="Save", command=save_changes, font=("Helvetica", 12))
         save_button.pack(pady=5)
+
 
     def mark_task_done(self, task_index):
         completed_task = self.tasks[task_index]
