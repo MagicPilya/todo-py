@@ -154,7 +154,6 @@ class TodoApp:
         save_button = tk.Button(edit_window, text="Save", command=save_changes, font=("Helvetica", 12))
         save_button.pack(pady=5)
 
-
     def mark_task_done(self, task_index):
         completed_task = self.tasks[task_index]
         self.archive.append({'title': completed_task.title, 'completed': datetime.now().strftime('%Y-%m-%d'), 'deadline': completed_task.deadline})
@@ -191,30 +190,39 @@ class TodoApp:
                 delete_button.pack(side=tk.LEFT, padx=5)
 
     def view_archive(self):
-        archive_window = tk.Toplevel(self.root)
-        archive_window.title("Archive")
+        self.archive_window = tk.Toplevel(self.root)
+        self.archive_window.title("Archive")
+
+        self.archive_frame = tk.Frame(self.archive_window)
+        self.archive_frame.pack(pady=10, padx=10)
+
+        self.render_archive_frame()
+
+    def render_archive_frame(self):
+        for widget in self.archive_frame.winfo_children():
+            widget.destroy()
 
         columns = ["Task Title", "Completed Date", "Deadline", "Restore", "Delete"]
         max_title_length = MAX_TASK_TITLE_LENGTH
 
         for col_num, col_name in enumerate(columns):
-            header = tk.Label(archive_window, text=col_name, font=("Helvetica", 12, "bold"))
+            header = tk.Label(self.archive_frame, text=col_name, font=("Helvetica", 12, "bold"))
             header.grid(row=0, column=col_num, padx=5, pady=5, sticky="w")
 
         for row_num, task in enumerate(self.archive, start=1):
-            title_label = tk.Label(archive_window, text=task['title'], font=("Helvetica", 12), width=max_title_length)
+            title_label = tk.Label(self.archive_frame, text=task['title'], font=("Helvetica", 12), width=max_title_length)
             title_label.grid(row=row_num, column=0, padx=5, pady=5, sticky="w")
 
-            completed_label = tk.Label(archive_window, text=task.get('completed', 'N/A'), font=("Helvetica", 12))
+            completed_label = tk.Label(self.archive_frame, text=task.get('completed', 'N/A'), font=("Helvetica", 12))
             completed_label.grid(row=row_num, column=1, padx=5, pady=5, sticky="w")
 
-            deadline_label = tk.Label(archive_window, text=task['deadline'], font=("Helvetica", 12))
+            deadline_label = tk.Label(self.archive_frame, text=task['deadline'], font=("Helvetica", 12))
             deadline_label.grid(row=row_num, column=2, padx=5, pady=5, sticky="w")
 
-            restore_button = tk.Button(archive_window, text="Restore", command=lambda idx=row_num-1: self.restore_task(idx), font=("Helvetica", 12))
+            restore_button = tk.Button(self.archive_frame, text="Restore", command=lambda idx=row_num-1: self.restore_task(idx), font=("Helvetica", 12))
             restore_button.grid(row=row_num, column=3, padx=5, pady=5)
 
-            delete_button = tk.Button(archive_window, text="Delete", command=lambda idx=row_num-1: self.delete_from_archive(idx, archive_window), font=("Helvetica", 12))
+            delete_button = tk.Button(self.archive_frame, text="Delete", command=lambda idx=row_num-1: self.delete_from_archive(idx), font=("Helvetica", 12))
             delete_button.grid(row=row_num, column=4, padx=5, pady=5)
 
     def restore_task(self, task_index):
@@ -223,12 +231,17 @@ class TodoApp:
         del self.archive[task_index]
         self.save_archive()
         self.update_task_frame()
+        self.render_archive_frame()
+        if not self.archive:  # Если архив пуст, закрываем окно архива
+            self.archive_window.destroy()
 
-    def delete_from_archive(self, task_index, archive_window):
+    def delete_from_archive(self, task_index):
         del self.archive[task_index]
         self.save_archive()
-        archive_window.destroy()
-        self.view_archive()
+        self.render_archive_frame()
+        if not self.archive:  # Если архив пуст, закрываем окно архива
+            self.archive_window.destroy()
+
 
     def on_closing(self):
         self.save_tasks()
